@@ -1,0 +1,22 @@
+Saving ForeignKey and ManyToManyField fields
+การ update foreign key ก็สามารถทำได้เหมือนกับการ update field ปกติ โดยใช้ save()
+
+>>> from blogs.models import Blog, Entry
+>>> entry = Entry.objects.get(pk=1)
+>>> cheese_blog = Blog.objects.get(name="Cheddar Talk")
+>>> entry.blog = cheese_blog # Update FK blog ของ entry (ID = 1) ไปที่ cheese_blog (name = "Cheddar Talk")
+>>> entry.save()
+แต่การ update ManyToManyField จะทำงานแตกต่างไปนิดหน่อย เราจะต้องใช้ add() ดังตัวอย่าง
+
+สมมติเราต้องการ add instance joe เป็นหนึ่งใน authors ของ instance entry (ID = 1)
+
+>>> from blogs.models import Author
+>>> joe = Author.objects.create(name="Joe")
+>>> entry.authors.add(joe)
+เราสามารถ add() ที่ละหลายๆ instances เข้าไปก็ได้
+
+>>> john = Author.objects.create(name="John")
+>>> paul = Author.objects.create(name="Paul")
+>>> george = Author.objects.create(name="George")
+>>> ringo = Author.objects.create(name="Ringo")
+>>> entry.authors.add(john, paul, george, ringo)
