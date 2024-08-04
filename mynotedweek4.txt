@@ -1,0 +1,172 @@
+.save()    -> Insert
+	-> Update
+
+
+
+
+Saving ForeignKey and ManyToManyField fields
+
+
+
+
+update ManyToManyField
+>>> from blog.models import Author
+>>> joe = Author.objects.create(name="Joe") //สร้างrecordในAuthor
+>>> entry.authors.add(joe) //ทำในตารางBridge Entity
+
+
+Retrieving objects ->เข้าใช้งาน Manager จะเข้าถึงด้วย .objects
+
+
+Retrieving specific objects with filters (Select, Where)   => .filter() ออกมาเป็นQuery set
+
+
+Chaining filters
+.filter() = ดึงตัวที่กรอง
+.exclude() = ดึงตัวอื่นนอกจากข้อมูลที่เราใส่
+
+
+Retrieving a single object with get()
+*******ใช้.get() / .first() ก็ได้
+
+การใช้ .get(), .first(), .filter()[0] =>> ได้instanceมาเลย 
+****.filter() =>> ได้Query set
+>>> Entry.objects.filter(id=3).first()
+<Entry: New Blog Post>
+>>> Entry.objects.filter(id=3)[0]
+<Entry: New Blog Post>
+>>> Entry.objects.get(id=3)
+<Entry: New Blog Post>
+
+
+
+Limiting QuerySets(เหมือน slice list PYTHHON)
+>>>Entry.objects.all()[:5]  # LIMIT 5 ->ดึงข้อมูล 5 รายการแรก
+
+>>>Entry.objects.all()[5:10]  # OFFSET(ข้าม 5 รายการแรก) 5 LIMIT(ดึงข้อมูล 5 รายการถัดไป) ดึงข้อมูลรายการที่ 6 ถึง 10
+
+NOTE***: การใช้ negative index (Entry.objects.all()[-1]) นั้นไม่ support
+
+
+
+
+Comparing objects การเปรียบเทียบ instance ของ model 2 ตัวว่าเป็นตัวเดียวกันไหม
+-> ใช้ == 
+>>> some_entry == other_entry
+>>> some_entry.id == other_entry.id
+# return True/False
+
+
+
+Deleting objects
+
+>>> Blog.objects.get(pk=1).delete()
+(1, {'blogs.Blog': 1})
+ลบทีละตัว
+>>> e.delete()
+(1, {'blog.Entry': 1})
+ลบทีละหลายตัว
+>>> Entry.objects.filter(pub_date__year=2005).delete()
+(5, {'webapp.Entry': 5})
+
+
+
+Copying model instances
+Django ไม่มี method สำหรับ copy model instances
+ต้องset ให้ instance.pk = None และ instnace._state.adding = True
+
+>>> blog = Blog(name="Daou", tagline="Leader Laz1 Tpop") //สร้าง instanceตัวแรกขึ้นมา ,blog.pk==1
+>>> blog.save()
+****
+>>>blog.pk = None //การตั้งค่า pk เป็น None จะบอกให้ Django ว่านี่เป็น instance ใหม่ที่ยังไม่มี primary key
+>>>blog._state.adding = True //การตั้งค่า _state.adding เป็น True จะบอกให้ Django ว่านี่เป็นการเพิ่มข้อมูลใหม่ลงในฐานข้อมูล
+***ถ้า False Django จะพิจารณาว่า instance นั้นไม่ใช่ instance ใหม่ แต่เป็น instance ที่มีอยู่แล้วในฐานข้อมูล
+ ซึ่งหมายความว่าการเรียก save() จะทำการ UPDATE ไม่ใช่Insert
+>>>blog.save()  # บันทึก instance ที่คัดลอกลงในฐานข้อมูล, blog.pk == 2
+
+
+
+Performing raw SQL query
+ผลลัพธ์ที่ได้จาก .raw() เป็น instance ของ class django.db.models.query.RawQuerySet ซึ่งใช้งานคล้ายกับ QuerySet 
+
+ # สมมติเรามี model Person
+class Person(models.Model):
+    first_name = models.CharField(...)
+    last_name = models.CharField(...)
+    birth_date = models.DateField(...)
+
+
+# สามารถเขียน SELECT query ได้ดังนี้ ###
+>>> for p in Person.objects.raw("SELECT * FROM myapp_person"):
+...     print(p)
+...
+John Smith
+Jane Jones
+
+
+# สมมติชื่อ field ไม่ตรงกับที่ประกาศใน model
+>>>name_map = {
+    "first": "first_name",
+    "last": "last_name",
+    "bd": "birth_date",
+    "pk": "id"
+} //name_map ใช้สำหรับแปลงชื่อ field จาก SQL query ไปเป็นชื่อ field ใน model
+>>> Person.objects.raw("SELECT * FROM some_other_table", translations=name_map)
+
+/////////////////////////////////////////////////////////////////
+
+
+Field Lookups ->เราสามารถเขียน WHERE condition ในการ query
+format -> field__lookuptype=value
+กรณีที่ต้องการ filter ด้วย foreign key จะต้องเติม _id ต่อท้ายชื่อ field  -> Entry.objects.filter(blog_id=4)
+
+Field lookup reference
+exact: ใช้เพื่อค้นหาข้อมูลที่ตรงตามค่าที่กำหนดอย่างเป๊ะๆ 
+	-> MyModel.objects.filter(name__exact='John') --คำสั่งนี้จะคืนค่าทุกแถวที่มีค่า name เท่ากับ 'John' อย่างแม่นยำ
+
+iexact: ใช้เพื่อค้นหาข้อมูลที่ตรงตามค่าที่กำหนด โดยไม่สนใจความแตกต่างของตัวพิมพ์เล็กพิมพ์ใหญ่
+	-> MyModel.objects.filter(name__iexact='john') --คำสั่งนี้จะคืนค่าทุกแถวที่มีค่า name เท่ากับ 'john' หรือ 'John' หรือ 'JOHN' ฯลฯ
+
+contains: ใช้เพื่อค้นหาข้อมูลที่มีค่าที่กำหนดเป็นส่วนหนึ่งของฟิลด์******ถ้าต้องการค้นหาแบบไม่สนใจตัวพิมพ์เล็กพิมพ์ใหญ่ สามารถใช้ icontains
+	->MyModel.objects.filter(description__contains='Laz1')--คำสั่งนี้จะคืนค่าทุกแถวที่มีคำว่า 'Laz1' เป็นส่วนหนึ่งของค่าในฟิลด์ description
+startswith: ใช้เพื่อค้นหาข้อมูลที่ค่าของฟิลด์เริ่มต้นด้วยสตริง*****ถ้าต้องการค้นหาแบบไม่สนใจตัวพิมพ์เล็กพิมพ์ใหญ่ สามารถใช้ istartswith:
+endswith: ใช้เพื่อค้นหาข้อมูลที่ค่าของฟิลด์ลงท้ายด้วยสตริงที่กำหนด ***ถ้าต้องการค้นหาแบบไม่สนใจตัวพิมพ์เล็กพิมพ์ใหญ่ สามารถใช้ iendswith:
+in: ใช้เพื่อค้นหาข้อมูลที่ค่าของฟิลด์อยู่ในลิสต์ที่กำหนด
+range: feel between
+isnull: ใช้เพื่อค้นหาข้อมูลที่ค่าของฟิลด์เป็น NULL(field__isnull=True) หรือไม่เป็น NULL(fiels__isnull=False)
+regex: ใช้เพื่อค้นหาข้อมูลที่ค่าของฟิลด์ตรงกับ Regular Expression
+MyModel.objects.filter(name__regex=r'^John$') --ค้นหาข้อมูลที่ฟิลด์ name ตรงกับแพทเทิร์น 'John' ตาม Regular Expression:
+**iregex = case in-sensitive**
+--Regular Expression--
+-> ^ หมายถึงจุดเริ่มต้นของสตริง 
+-> $ หมายถึงจุดสิ้นสุดของสตริง
+
++++++สรุปเคส Insensitive ให้เติม i ข้างหน้า+++++++
+
+////////////////////////////////////////////////////////////////////
+Lookups that span relationships (Django จะไปจัดการเรื่องการ generate SQL JOINs ให้หลังบ้าน) {{{Django นั้น support การใช้ +, -, *, / ร่วมกับ F()}}}}
+-->เพียงเอาชื่อ field foreign key มาต่อด้วยชื่อ field ของตารางที่อ้างอิงไปถึง
+( - blog__name - ) :field fkอยู่หน้าหรือหลังก็ได้!!!!!
+Entry.objects.filter(blog__name__contains="Beatles Blog")  ** field fk คือ contains ++ 
+และยังสามารถต่อด้วย lookup type ได้อีก ->Blog.objects.filter(entry__authors__name__isnull=True)
+
+Filters can reference fields on the model
+ปรียบเทียบค่าของ field ใน model กับ field อื่นใน model เดียวกัน เราสามารถใช้ F expressions ได้ F()
+>>> from django.db.models import F
+>>> Entry.objects.filter(number_of_comments__gt=F("number_of_pingbacks"))//เรากำลังค้นหา Entry ที่มีจำนวนความคิดเห็น (number_of_comments) มากกว่าจำนวน pingbacks
+>>> Entry.objects.filter(authors__name=F("blog__name")) # span relationships //เรากำลังค้นหา Entry ที่มีชื่อผู้เขียน (authors__name) ตรงกับชื่อของบล็อก (blog__name).
+
+Complex lookups with Q objects
+filter() -> select where and
+Q objects -> or not
+
+
+
+
+
+
+
+
+
+
+ 
