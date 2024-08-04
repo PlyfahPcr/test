@@ -1,0 +1,82 @@
+Django ORM (Object-Relational Mapping)
+F() Expressions -> ใช้สำหรับการอ้างอิงถึงฟิลด์ในฐานข้อมูลคำนวณหรือเปรียบเทียบ(+-*%)
+annotate() -> พิ่มฟิลด์ใหม่ เป็นผลลัพธ์ของการคำนวณที่ทำขึ้นบนฟิลด์ที่มีอยู่.
+
+list() -> เเปลง queryset เป๋น dic
+.values() ใชัเลือกfieldจากฐานข้อมูล,ใช้แยกข้อมูลตามฟิลด์
+หมายเหตุ: การใช้ default=0 ใน Avg() เป็นการตั้งค่าเริ่มต้นเพื่อป้องกันกรณีที่ไม่มีผลลัพธ์. แต่ตามปกติแล้ว
+, การคำนวณ Avg โดยไม่กำหนด default จะส่งค่าผลลัพธ์เป็น None หากไม่มีผลลัพธ์.
+ from django.db.models import F
+
+products_in_it = Product.objects.filter(categories__name="Information Technology").distinct().order_by('id')[:10]
+
+
+for product in products_in_it:
+    category_names = product.categories.values_list('name', flat=True)
+    print(f"PRODUCT ID: {product.id}, PRODUCT NAME: {product.name}, PRODUCT CATEGORY: {', '.join(category_names)}")
+
+
+
+
+from django.db.models import F
+
+# ค้นหาสินค้าที่มีหมวดหมู่เป็น "Information Technology"
+products_in_it = Product.objects.filter(categories__name="Information Technology").distinct().order_by('id')[:10]
+
+# แสดงข้อมูลสินค้าและหมวดหมู่
+for product in products_in_it:
+    category_names = product.categories.values_list('name', flat=True)
+    print(f"PRODUCT ID: {product.id}, PRODUCT NAME: {product.name}, PRODUCT CATEGORY: {', '.join(category_names)}")
+
+
+
+
+from django.db.models import F
+from shop.models import Product, ProductCategory
+
+# ค้นหาสินค้าในประเภท "Information Technology" และเรียงลำดับตาม ID
+products = Product.objects.filter(
+    categories__name="Information Technology"
+).order_by('id')[:10]
+
+# ดึงข้อมูลประเภทสินค้า (ProductCategory) ของสินค้าทุกชิ้น
+categories = {category.id: category.name for category in ProductCategory.objects.all()}
+
+# แสดงผลข้อมูลสินค้า
+for p in products:
+    category_names = [category.name for category in product.categories.all()]
+    print(f"PRODUCT ID: {p.id}, PRODUCT NAME: {p.name}, PRODUCT CATEGORY: {', '.join(category_names)}")
+
+
+
+
+products = Product.objects.filter(categories__name="Information Technology").order_by("id")[:10]
+for product in products:
+    category_names = [category.name for category in product.categories.all()]
+    # แสดง PRODUCT ID และ PRODUCT NAME
+    print(f"PRODUCT ID: {product.id}, PRODUCT NAME: {product.name}, PRODUCT CATEGORY: ", end="")
+
+แสดงชื่อหมวดหมู่ในบรรทัดเดียว
+    print(*category_names, sep=", ")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
