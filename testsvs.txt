@@ -1,0 +1,83 @@
+#Create virtual environment#
+ตรวจสอบว่ามีการติดตั้ง Python แล้วในเครื่อง
+> py --version
+Install virtualenv
+> pip install virtualenv
+Create project folder
+> mkdir my_projects
+Create a virtual environment
+> py -m venv myvenv
+Activate virtual environment
+> myvenv\Scripts\activate.bat
+Install Django
+> pip install django
+# Create project "myblogs"
+> django-admin startproject myblogs
+#Create the "blogs" app
+> python manage.py startapp blogs
+# Start server
+> python manage.py runserver
+
+ติดตั้ง Postgres Client psycopg2
+> pip install psycopg2
+OR
+> pip install psycopg2-binary
+
+////////////////////////////////////////////////////////////////
+สร้าง database ใน Postgres DB
+
+ตั้งค่าใน settings.py
+# Database setting
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "blogs",
+        "USER": "db_username",
+        "PASSWORD": "password",
+        "HOST": "localhost",
+        "PORT": "5432",
+    }
+}
+
+# Add app blogs to INSTALLED_APPS
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # Add your apps here
+    "blogs",
+]
+////////////////////////////////////////////////////////////
+รสร้าง models ต่างๆ ให้เหมือนตามใน ER diagramเ(เพิ่ม code ในmodels.py)
+ >python manage.py makemigrations //runscript
+ python manage.py migrate // 
+//////////////////////////////////////////////////////////
+
+Using Django in Jupyter Notebook
+ต้องactivate virtualenvก่อน 
+>pip install django-extensions ipython jupyter notebook
+>pip install ipython==8.25.0 jupyter_server==2.14.1 jupyterlab==4.2.2 jupyterlab_server==2.27.2
+>pip install notebook==6.5.7
+
+เพิ่ม django-extensions ใน INSTALLED_APPS ในไฟล์ settings.py
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+
+    "django_extensions",
+    "blogs",
+]
+ทำการ start Jupyter Notebook server ด้วย command
+>python manage.py shell_plus --notebook
+
+รันcellแรก
+import os
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
